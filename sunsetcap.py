@@ -6,10 +6,14 @@ from suntime import Sun, SunTimeException
 import schedule
 import json
 from urllib.request import urlopen
+import cv2
 
 lat = 0
 long = 0
-
+cam = cv2.VideoCapture(0)
+curr_time = datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+filename = curr_time + '.jpg'
+    
 # Get computer location
 def getLoc():
     urlopen("http://ipinfo.io/json")
@@ -27,8 +31,21 @@ def getSSTime():
 
     return(today_ss)
 
-schedule.every().day.at("00:00").do(getSSTime)
+# Take picture of sunset and save to computer
+def takePic(cam):
+        ret, frame = cam.read()
+        cv2.imwrite(filename, frame)
+        if ret and frame is not None:
+            cam.release()
+            cv2.destroyAllWindows()
+    
+def main():
+    while True:
+        getLoc()
+        getSSTime()
+        takePic(cam)
+        time.sleep(10)
 
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+if __name__ == '__main__':
+    main()
+    
