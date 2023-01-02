@@ -13,6 +13,7 @@ import pathlib
 
 cur_path = pathlib.Path(__file__).parent.resolve()
 
+
 SUN_SET_CONFIG = os.path.join(cur_path, 'config/sun_set_config.json')
 NUM_PICS = 10
 PIC_INTERVAL = 60  #seconds
@@ -28,10 +29,8 @@ def getLoc():
 # Get sunset time daily
 def getSSTime(lat, long):
     sun = Sun(float(lat), float(long))
-    curr_date = datetime.datetime.today()
-    print("cur date: ", curr_date)
     today_ss = sun.get_local_sunset_time()
-    print("Today ss: ", today_ss)
+    print("Today sun set time loaded from internet: ", today_ss)
     
     jdata = {}
     jdata['Latitude'] = lat
@@ -54,7 +53,14 @@ def takePic():
         retry = 5
         while(retry > 0):
             curr_time = datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
-            filename = 'images/' + curr_time + '.jpg'
+            curr_date = datetime.datetime.today()
+            newpath = 'images/' + curr_date.strftime('%Y-%m-%d')
+            dir = os.path.join(cur_path, newpath)
+            if not os.path.exists(dir):
+                os.umask(0)
+                os.makedirs(dir, mode=0o777)
+
+            filename = dir + '/' + curr_time + '.jpg'
             ret, frame = cam.read()
             if ret:
                 cv2.imwrite(filename, frame)
@@ -71,10 +77,18 @@ def main():
     num_pics = 0
 
     while True:
+        curr_time = datetime.datetime.now()
         try:
             lat, long = getLoc()
             today_ss = getSSTime(lat, long)
-            curr_time = datetime.datetime.now()
+        except Exception as e:
+            # read from the config file (json)
+            with open(SUN_SET_CONFIG, 'r') as f:
+                data = json.load(f)
+                today_ss = datetime.datetime.strptime(
+                    curr_time.strftime('%Y-%m-%d') + " " + data['TodaySunSetTime'], '%Y-%m-%d %H:%M:%S')
+                print(f"sun set time loaded from file: {today_ss}")
+        try:
             today_ss_time = datetime.datetime.strptime(
                 curr_time.strftime('%Y-%m-%d') + " " + today_ss.strftime('%H-%M-%S'), '%Y-%m-%d %H-%M-%S')
             today_ss_time = curr_time
@@ -85,14 +99,12 @@ def main():
                 # command_rtc = 'rtcwake '
                 # os.system('rtc') 
                 pass
-            elif curr_time > (today_ss_time - timedelta(minutes=5)) and curr_time < (today_ss_time + timedelta(minutes=5)):
+            elif curr_time > (today_ss_time - timedelta(minutes=5)) and curr_time < (today_ss_time + timedelta(minutes=20)):
                 takePic()
-                num_pics += 1
             
             time.sleep(PIC_INTERVAL)            
         except Exception as e:
             print(f"main ERROR: {e}")
-    os.system('rtcwake ')
 
 if __name__ == '__main__':
     main()
