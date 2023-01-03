@@ -10,6 +10,7 @@ from urllib.request import urlopen
 import cv2
 import os
 import pathlib
+import bracket_capture
 
 cur_path = pathlib.Path(__file__).parent.resolve()
 
@@ -45,12 +46,10 @@ def getSSTime(lat, long):
 # Take picture of sunset and save to computer
 def takePic():
     try:
-        cam = cv2.VideoCapture(0)
-        cam.set(cv2.CAP_PROP_FRAME_WIDTH, 2592)
-        cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1944)
-        
+
         # retry 5 times until we capture an image
         retry = 5
+        
         while(retry > 0):
             curr_time = datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
             curr_date = datetime.datetime.today()
@@ -59,16 +58,8 @@ def takePic():
             if not os.path.exists(dir):
                 os.umask(0)
                 os.makedirs(dir, mode=0o777)
-
-            filename = dir + '/' + curr_time + '.jpg'
-            ret, frame = cam.read()
-            if ret:
-                cv2.imwrite(filename, frame)
-                print(f"captured one image: {filename}")
-                break
-            retry -= 1
-            
-        cam.release()
+            bracket_capture.hdr(curr_time, dir)               
+                
     except Exception as e:
         print(f"takePic ERROR: {e}")
 
@@ -91,6 +82,8 @@ def main():
         try:
             today_ss_time = datetime.datetime.strptime(
                 curr_time.strftime('%Y-%m-%d') + " " + today_ss.strftime('%H-%M-%S'), '%Y-%m-%d %H-%M-%S')
+                
+            # for testing purposes    
             today_ss_time = curr_time
             
             print(f"current time: {curr_time}")
