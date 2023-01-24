@@ -48,17 +48,15 @@ def takePic():
     try:
 
         # retry 5 times until we capture an image
-        retry = 5
-        
-        while(retry > 0):
-            curr_time = datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
-            curr_date = datetime.datetime.today()
-            newpath = 'images/' + curr_date.strftime('%Y-%m-%d')
-            dir = os.path.join(cur_path, newpath)
-            if not os.path.exists(dir):
-                os.umask(0)
-                os.makedirs(dir, mode=0o777)
-            bracket_capture.hdr(curr_time, dir)               
+
+        curr_time = datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+        curr_date = datetime.datetime.today()
+        newpath = 'images/' + curr_date.strftime('%Y-%m-%d')
+        dir = os.path.join(cur_path, newpath)
+        if not os.path.exists(dir):
+            os.umask(0)
+            os.makedirs(dir, mode=0o777)
+        bracket_capture.hdr(curr_time, dir)               
                 
     except Exception as e:
         print(f"takePic ERROR: {e}")
@@ -84,15 +82,15 @@ def main():
                 curr_time.strftime('%Y-%m-%d') + " " + today_ss.strftime('%H-%M-%S'), '%Y-%m-%d %H-%M-%S')
                 
             # for testing purposes    
-            today_ss_time = curr_time
+            #today_ss_time = curr_time
             
             print(f"current time: {curr_time}")
             print(f"today sun set time: {today_ss_time}")
-            if curr_time < (today_ss_time - timedelta(minutes=5)):
+            if curr_time < (today_ss_time - timedelta(minutes=10)):
                 # command_rtc = 'rtcwake '
                 # os.system('rtc') 
                 pass
-            elif curr_time > (today_ss_time - timedelta(minutes=5)) and curr_time < (today_ss_time + timedelta(minutes=20)):
+            elif curr_time > (today_ss_time - timedelta(minutes=15)) and curr_time < (today_ss_time + timedelta(minutes=20)):
                 takePic()
             
             time.sleep(PIC_INTERVAL)            

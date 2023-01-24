@@ -46,7 +46,7 @@ def hdr(curr_time, dir):
         filename = dir + '/' + curr_time + ' exp ' + str(exp) + '.jpg'
         if ret:
             print(f"capture one frame at exposure = {exp} filename = {filename}")
-            cv2.imwrite(filename, frame)
+            #cv2.imwrite(filename, frame)
             img_list.append(frame)
 
     cam.release()
