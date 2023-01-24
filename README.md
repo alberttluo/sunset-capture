@@ -1,4 +1,4 @@
-# sunset-capture
+### Automatic Sunset Capture
 
 # Enable Camera
 ```
