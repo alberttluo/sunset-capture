@@ -19,4 +19,4 @@ pip install suntime
 ```
 
 ## Sample Images After HDR Imaging
-
+![image](pictures/sunset.jpg)
