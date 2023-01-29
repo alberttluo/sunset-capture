@@ -11,14 +11,25 @@ import cv2
 import os
 import pathlib
 import bracket_capture
+import subprocess
 
 cur_path = pathlib.Path(__file__).parent.resolve()
 
-
+LOG_FILE = os.path.join(cur_path, 'log/log.txt')
 SUN_SET_CONFIG = os.path.join(cur_path, 'config/sun_set_config.json')
 NUM_PICS = 10
 PIC_INTERVAL = 60  #seconds
 
+# log the message to the log file with time stamp
+def log_message(mes: str):
+    curr_time = datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+    log_file = open(LOG_FILE, "a")
+    mes = curr_time + ": " + mes + "\n"
+    log_file.writelines(mes)
+    log_file.close()
+    
+    print(mes)
+    
 # Get computer location
 def getLoc():
     urlopen("http://ipinfo.io/json")
@@ -31,7 +42,7 @@ def getLoc():
 def getSSTime(lat, long):
     sun = Sun(float(lat), float(long))
     today_ss = sun.get_local_sunset_time()
-    print("Today sun set time loaded from internet: ", today_ss)
+    log_message(f"Today sun set time loaded from internet: {today_ss}")
     
     jdata = {}
     jdata['Latitude'] = lat
@@ -59,10 +70,26 @@ def takePic():
         bracket_capture.hdr(curr_time, dir)               
                 
     except Exception as e:
-        print(f"takePic ERROR: {e}")
+        log_message(f"takePic ERROR: {e}")
 
+# check if program is already running
+# return True if it is runninng, otherwise False
+def check_program():
+    prog = "python sunsetcap.py"
+    ret = subprocess.run(['ps', '-ef'], stdout=subprocess.PIPE)
+    ret_dec = ret.stdout.decode('utf-8')
+    count = ret_dec.count(prog)
+    if count >= 2:
+        return True
+    return False
+    
 def main():
-
+    log_message("Run sunsetcap.py ...")
+    
+    if check_program():
+        log_message('program is already running, quit this one')
+        return
+    
     num_pics = 0
 
     while True:
@@ -76,16 +103,16 @@ def main():
                 data = json.load(f)
                 today_ss = datetime.datetime.strptime(
                     curr_time.strftime('%Y-%m-%d') + " " + data['TodaySunSetTime'], '%Y-%m-%d %H:%M:%S')
-                print(f"sun set time loaded from file: {today_ss}")
+                log_message(f"sun set time loaded from file: {today_ss}")
         try:
             today_ss_time = datetime.datetime.strptime(
                 curr_time.strftime('%Y-%m-%d') + " " + today_ss.strftime('%H-%M-%S'), '%Y-%m-%d %H-%M-%S')
                 
             # for testing purposes    
-            #today_ss_time = curr_time
+            # today_ss_time = curr_time
             
-            print(f"current time: {curr_time}")
-            print(f"today sun set time: {today_ss_time}")
+            # log_message(f"current time: {curr_time}")
+            # log_message(f"today sun set time: {today_ss_time}")
             if curr_time < (today_ss_time - timedelta(minutes=10)):
                 # command_rtc = 'rtcwake '
                 # os.system('rtc') 
@@ -95,7 +122,7 @@ def main():
             
             time.sleep(PIC_INTERVAL)            
         except Exception as e:
-            print(f"main ERROR: {e}")
+            log_message(f"main ERROR: {e}")
 
 if __name__ == '__main__':
     main()
